@@ -1,0 +1,349 @@
+* OHAI
+
+[[file:entrance.jpg]]
+
+One Layer Down Below
+
+Kang-min Liu
+@gugod
+
+* Me:: @gugod
+
+Booking.com
+Taiwan ➡️ Amsterdam
+Travel Agent ✈️
+Senior Developer
+Coding: Perl, Javascript, Java
+Interviewer 面接者
+
+* Booking.com
+
+   Online
+🏨 Hotel
+   Reservation
+   Travel agent.
+   (BTW: We are hiring. Talk to Fiona)
+
+* Booking.com's by-product.
+
+• git-deploy
+• Sereal
+• ShardedKV
+• Hijk, Elastijk
+• Brick
+
+* Hijk:: Introduction ハイク
+
+• thin http client, pure perl.
+  200 line of code,
+  250 line of POD.
+
+• HTTP/1.1 server
+• persistent connection
+
+
+* Hijk:: Thin, feature poor
+
+• no Location - 30x redirects
+• no Content-Encoding
+• no Proxy
+• no SSL
+• no Chunked encodng (not yet)
+• no cookie jars
+• really low-level api :)
+
+* Hijk:: Low-level API
+
+# no param value validation,
+# no character escape.
+my $res = Hijk::request({
+    method       => "GET",
+    host         => "example.com",
+    port         => "80",
+    path         => "/flower",
+    query_string => "color=red"
+});
+
+if (exists $res->{error} and
+    $res->{error} & Hijk::Error::TIMEOUT) {
+    die "Oh noes we had some sort of timeout";
+}
+
+* Hijk:: ElasticSearch response
+
+> curl -D - http://localhost:9200/
+
+HTTP/1.1 200 OK
+Content-Type: application/json; charset=UTF-8
+Content-Length: 300
+
+{
+  "status" : 200,
+  "name" : "Ravage 2099",
+  "version" : {
+    "number" : "1.3.2",
+    "build_hash" : "dee175dbe2f254f3f26992f5d7591939aaefd12f",
+    "build_timestamp" : "2014-08-13T14:29:30Z",
+    "build_snapshot" : false,
+    "lucene_version" : "4.9"
+  },
+  "tagline" : "You Know, for Search"
+}
+
+* Hijk:: Use Cases
+
+• ElasticSearch
+• ShardedKV
+
+• couchdb / mongodb ... (maybe)
+• HBase (WIP)
+• nginx (need server config)
+
+Bascially data servers in your control
+
+* Hijk:: Simple Benchmark Numbers
+
+# 10_000 times
+curl -XGET http://localhost:9200/
+
+    ~/src/Hijk
+    > perl examples/bench-elasticsearch.pl
+               Rate lwp____ tiny___ hijk pp
+    lwp____   928/s      --    -77%    -93%
+    tiny___  4016/s    333%      --    -69%
+    hijk pp 13158/s   1318%    228%      --
+
+* Hijk:: Other benchmark
+
+From: http://www.martin-evans.me.uk/node/169
+
+HTTP::Tiny keep_alive=1:  6 wallclock secs ( 2.95 usr +  0.59 sys =  3.54 CPU) @ 1412.43/s (n=5000)
+HTTP::Tiny keep_alive=0: 13 wallclock secs ( 7.04 usr +  2.51 sys =  9.55 CPU) @ 523.56/s (n=5000)
+       LWP: 20 wallclock secs (14.35 usr +  2.71 sys = 17.06 CPU) @ 293.08/s (n=5000)
+  LWPGHHTP: 13 wallclock secs ( 8.11 usr +  2.12 sys = 10.23 CPU) @ 488.76/s (n=5000)
+     GHTTP:  6 wallclock secs ( 1.13 usr +  1.64 sys =  2.77 CPU) @ 1805.05/s (n=5000)
+      curl:  4 wallclock secs ( 0.88 usr +  0.40 sys =  1.28 CPU) @ 3906.25/s (n=5000)
+      furl:  6 wallclock secs ( 2.95 usr +  0.64 sys =  3.59 CPU) @ 1392.76/s (n=5000)
+      hijk:  3 wallclock secs ( 0.75 usr +  0.20 sys =  0.95 CPU) @ 5263.16/s (n=5000)
+
+
+* Hijk:: Why?
+
+      Yet
+  Another
+     HTTP
+   Client ?
+
+* HTTP/1.1
+
+HTTP is designed to permit intermediate network
+elements to improve or enable communications between
+clients and servers. High-traffic websites often
+benefit from web cache servers that deliver content on
+behalf of upstream servers to improve response
+time. Web browsers cache previously accessed web
+resources and reuse them when possible to reduce
+network traffic. HTTP proxy servers at private network
+boundaries can facilitate communication for clients
+without a globally routable address, by relaying
+messages with external servers.
+
+ref: https://en.wikipedia.org/wiki/HTTP
+
+* HTTP/1.1
+
+• generic purposes, well-understood
+• browser ⇆ server
+  • proxy
+  • multi content-type (text, image, video)
+  • partial content
+• congested network
+  • eg. in a YAPC::Asia with 1000 wifi clients...
+• streaming + non-streaming
+
+* HTTP/1.1
+
+   app ⇆ database ?
+
+• streaming ? ...maybe
+• partial content ?
+• congested network ?
+• proxy ?
+• content type ?
+• content encoding ?
+
+* Hijk
+
+Don't do un-necessary works
+Do as few things as possible.
+(B. lazy)
+
+* git-deploy
+
+• deployment tool
+• specialized for
+  booking.com infrastructure
+
+• can be tweaked for
+  many infrastructure
+
+• 30 deployments per-day
+
+* Sereal
+
+• Data Serealization Format
+• speciality: space efficient.
+  relation, reference, hash key reuse...
+[[file:sereal-encoded-output-size.png]]
+• saved 10 GB/s bandwidth every day.
+* ShardedKV
+
+• Key-value store interface
+  in Perl
+• speciality: consistent hashing
+
+* Brick
+
+• Search Engine
+• centralized
+• specialized server and client
+  • scale vertically
+  • scale horizontally
+
+• (not open sourced -- yet)
+
+* Question
+
+Why would a "travel agent" reinvent
+so many wheels in their work ?
+
+* 
+
+
+    Specialized
+
+
+
+* 
+
+    Specialized       専門化
+        vs
+    General Purpose   多目的
+
+* Software design
+
+ Archteting 構造
+Engineering 工学
+  Trade-off 妥協
+
+* Problem solving
+
+| Time 時      | Space 空     |
+| CPU          | Disk         |
+| Latency      | Bandwidth    |
+| Materialized | Normalized   |
+| Distributed  | Centralized  |
+| Event        | Synchronized |
+
+* Software development
+
+| Working software       | Comprehevsive Documentation |
+| Interaction            | Process and Tools           |
+| Customer collaboration | contract negotiation        |
+| Respond to change      | Following Plans             |
+
+Agile manifesto: http://agilemanifesto.org
+
+* 
+
+    General Purpose
+           ⇅
+    Layer of Indirections
+
+* App Stack Today
+          +---------------------------------+
+          |+-------------------------------+|
+          ||+-----------------------------+||
+          |||+---------------------------+|||
+          ||||    +-----------------+    ||||
+          ||||    |+--------------+ |    ||||
+          ||||    ||Business Logic| |    ||||
+          ||||    |+--------------+ |    ||||
+          ||||    |Web App Framework|    ||||
+          ||||    +-----------------+    ||||
+          ||||Container / Virtual Machine||||
+          |||+---------------------------+|||
+          |||        Host Machine         |||
+          ||+-----------------------------+||
+          ||           Rack                ||
+          |+-------------------------------+|
+          |          Data Center            |
+          +---------------------------------+
+
+* Indirection
+
+Value++
+Complexity++
+
+* Indirection
+
+(Visible Value)++
+(Hidden  Complexity)++
+
+* Indirection
+
+"All problems in computer science can be solved by another level of indirection.
+ But that usually will create another problem."
+
+          -- David Wheeler
+
+* Indirection
+
+"All problems in computer science can be solved by another level of indirection.
+ Except the problem of having too many level of indirection."
+
+* Specialization
+
+• with correct assumptions
+• do only necessary steps
+• breaking indirection levels
+• gain simplicity
+• gain efficiency
+
+* _
+
+
+
+           Conclusion
+
+
+
+* 成語 / Chinese proverb
+
+  知其然而不知其所以然
+  zhī qí rán ér bù zhī qí suǒ yǐ rán
+
+  Knowing the outcome but not the cause.
+
+
+* 成語（改）
+
+  知其然，要知其所以然
+  zhī qí rán, yào zhī qí suǒ yǐ rán
+
+  Knowing what, knowing how.
+
+
+* _
+
+  [[file:entrance.jpg]]
+
+  Know one more layer down in the stack.
+
+* OKTHXBYE
+
+   Thank you for listening
+   @gugod
+
+  
+   
